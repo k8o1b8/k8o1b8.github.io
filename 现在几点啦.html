@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>大五班时钟系统</title>
+    <style>
+        /* 保持原有样式不变 */
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            cursor: default;
+            user-select: none;
+        }
+
+        #main-container {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 5%;
+            transition: opacity 0.3s;
+        }
+
+        #digital-container {
+            flex: 1;
+            text-align: center;
+            padding-right: 5%;
+        }
+
+        #digital-clock {
+            font-size: 10em;
+            letter-spacing: 3px;
+            font-weight: bold;
+            margin: 0;
+            color: rgb(245, 245, 245);
+            transition: font-size 0.3s;
+        }
+
+        #analog-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s;
+        }
+
+        #analog-clock {
+            width: min(75vh, 75vw);
+            height: min(75vh, 75vw);
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.15);
+            box-shadow: 
+                0 0 40px rgba(255,255,255,0.1),
+                inset 0 0 30px rgba(255,255,255,0.08);
+        }
+
+        .settings {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            z-index: 100;
+        }
+
+        .settings-gear {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: 0.3s;
+        }
+
+        .settings-gear:hover {
+            opacity: 1;
+            transform: rotate(90deg);
+        }
+
+        .settings-panel {
+            position: absolute;
+            left: 50px;
+            bottom: 0;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 8px;
+            width: 200px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+
+        .settings:hover .settings-panel {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .settings-item {
+            margin: 10px 0;
+        }
+
+        .settings-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #ddd;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div id="main-container">
+        <div id="digital-container">
+            <div id="digital-clock"></div>
+        </div>
+        <div id="analog-container">
+            <canvas id="analog-clock"></canvas>
+        </div>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="settings">
+        <svg class="settings-gear" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+        </svg>
+        <div class="settings-panel">
+            <div class="settings-item">
+                <label>页面亮度</label>
+                <input type="range" id="brightness" min="0.3" max="1" value="1" step="0.1">
+            </div>
+            <div class="settings-item">
+                <label>数字大小</label>
+                <input type="range" id="fontSize" min="6" max="14" value="10" step="0.5">
+            </div>
+            <div class="settings-item">
+                <label>时钟大小</label>
+                <input type="range" id="clockSize" min="50" max="90" value="75" step="5">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 数字时钟
+        const digitalClock = document.getElementById('digital-clock');
+        function updateDigitalClock() {
+            const now = new Date();
+            let hours = now.getHours() % 12 || 12;
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            digitalClock.textContent = `${hours}:${minutes}`;
+        }
+
+        // 模拟时钟绘制
+        const canvas = document.getElementById('analog-clock');
+        const ctx = canvas.getContext('2d');
+        let clockSizeRatio = 0.75;
+
+        function resizeCanvas() {
+            const size = Math.min(window.innerHeight, window.innerWidth) * clockSizeRatio;
+            canvas.width = size;
+            canvas.height = size;
+            drawClock();
+        }
+
+        function drawClock() {
+            const radius = canvas.width / 2;
+            ctx.resetTransform();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.translate(radius, radius);
+
+            // 绘制表盘
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            ctx.fill();
+
+            // 绘制刻度
+            ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+            ctx.lineWidth = 2;
+            for(let i = 0; i < 60; i++) {
+                const angle = (i * Math.PI)/30;
+                const length = i % 5 === 0 ? 20 : 8;
+                ctx.beginPath();
+                ctx.moveTo(Math.sin(angle) * (radius - length), 
+                         Math.cos(angle) * (radius - length));
+                ctx.lineTo(Math.sin(angle) * (radius - 5), 
+                         Math.cos(angle) * (radius - 5));
+                ctx.stroke();
+            }
+
+            // 绘制数字
+            ctx.font = `${radius*0.15}px Arial`;
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            for(let i = 1; i <= 12; i++) {
+                const angle = (i * Math.PI)/6 - Math.PI/2;
+                const textRadius = radius * 0.75;
+                ctx.save();
+                ctx.rotate(angle);
+                ctx.translate(0, -textRadius);
+                ctx.rotate(-angle);
+                ctx.fillText(i.toString(), 0, 0);
+                ctx.restore();
+            }
+
+            // 获取当前时间
+            const now = new Date();
+            const hours = now.getHours() % 12;
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const milliseconds = now.getMilliseconds();
+
+            // 绘制指针
+            drawHand((hours * Math.PI/6) + (minutes * Math.PI/(6*60)), radius*0.5, 8, '#fff');
+            drawHand((minutes * Math.PI/30) + (seconds * Math.PI/(30*60)), radius*0.7, 5, '#fff');
+            drawHand((seconds + milliseconds/1000) * Math.PI/30, radius*0.85, 2, '#fb923c');
+
+            // 中心点
+            ctx.beginPath();
+            ctx.arc(0, 0, radius*0.04, 0, Math.PI*2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+        }
+
+        function drawHand(angle, length, width, color) {
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(0,0);
+            ctx.rotate(angle);
+            ctx.lineTo(0, -length);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // 设置功能
+        document.getElementById('brightness').addEventListener('input', (e) => {
+            document.getElementById('main-container').style.opacity = e.target.value;
+        });
+
+        document.getElementById('fontSize').addEventListener('input', (e) => {
+            digitalClock.style.fontSize = `${e.target.value}em`;
+        });
+
+        document.getElementById('clockSize').addEventListener('input', (e) => {
+            clockSizeRatio = e.target.value / 100;
+            resizeCanvas();
+        });
+
+        // 初始化
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 全屏功能
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F11') {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        // 动画循环
+        function animate() {
+            updateDigitalClock();
+            drawClock();
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>
